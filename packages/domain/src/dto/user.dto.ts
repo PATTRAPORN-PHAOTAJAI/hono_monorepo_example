@@ -1,4 +1,4 @@
-import type {IUserEntity} from "../entity/user.js"
+import type {IRoleEntity, IUserEntity} from "../entity/user.js"
 import {createResponseSchema} from "../utils/index.js";
 import {z} from "zod";
 

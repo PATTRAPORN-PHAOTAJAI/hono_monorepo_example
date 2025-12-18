@@ -1,12 +1,11 @@
 import { UserService } from "../services/user.js"
 import { UserRepositorySqlite } from "../repository/sqlite/user.js"
 import { CreateUserRequest } from "@repo/domain/request/user.js";
-import { zValidator } from "@hono/zod-validator"
 import { type UserCreateDto, type UserDto, UserListResponseSchema, UserResponseSchema } from "@repo/domain/dto/user.dto.js";
 import { Hono } from 'hono'
 import { describeRoute, resolver } from "hono-openapi";
 import { createValidator } from "../utils/index.js";
-import { z } from "zod";
+
 
 let userService = new UserService(new UserRepositorySqlite());
 
@@ -53,13 +52,7 @@ api.post('/users',
         requestBody: {
             content: {
                 "application/json": {
-                    schema: resolver(CreateUserRequest),
-                    example: {
-                        username: "admin123",
-                        password: "admin123",
-                        password_confirmation: "admin123",
-                        email: "admin123@admin.com",
-                    }
+                    schema: (await resolver(CreateUserRequest).toOpenAPISchema()).schema
                 }
             }
         },

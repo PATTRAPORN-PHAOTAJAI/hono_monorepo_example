@@ -5,36 +5,21 @@ import { openAPIRouteHandler } from "hono-openapi";
 import api from "./api/index.js";
 import {swaggerUI} from "@hono/swagger-ui";
 
-const app = new Hono()
+type D1Database = any;
 
-serve({
-  fetch: app.fetch,
-  port: 3000
-}, (info) => {
-  console.log(`Server is running on http://localhost:${info.port}`)
+const app = new Hono<{ Bindings: { DB: D1Database } }>()
+
+app.get('/license', async (c) => {
+  const { results } = await c.env.DB.prepare('SELECT * FROM Licenses').all()
+  return c.json(results)
 })
 
-//register middle ware
-app.onError((err, c) => {
-  console.error("Error caught:", err)
-  return c.json({ error: err.message }, 500)
+app.post('/license', async (c) => {
+  const body = await c.req.json()
+  await c.env.DB.prepare(
+    'INSERT INTO Licenses (LicenseNumber, IssueDate, ExpiryDate, Type) VALUES (?, ?, ?, ?)'
+  ).bind(body.LicenseNumber, body.IssueDate, body.ExpiryDate, body.Type).run()
+  return c.json({ message: 'Created' }, 201)
 })
 
-
-//register routes
-app.route('/api',api
-)
-
-
-//open api
-app.get('/openapi.json',openAPIRouteHandler(app, {
-  documentation : {
-    info :{
-      title : "API",
-      version : "1.0.0",
-      description : "API"
-    }
-  }
-}))
-
-app.get('/docs', swaggerUI({ url: '/openapi.json' }))
+export default app
